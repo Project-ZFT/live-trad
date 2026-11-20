@@ -1,0 +1,17 @@
+{
+  "name": "cuvant-live",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "test": "node scripts/test-logic.mjs"
+  },
+  "dependencies": {
+    "peerjs": "^1.5.4",
+    "qrcode-generator": "^1.4.4"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

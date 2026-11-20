@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Cuvânt Live – traducere</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23f2b84b'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+<header>
+  <h1>Cuvânt Live</h1>
+  <span id="traducere" class="estompat">Cornilescu (VDC)</span>
+  <span class="spatiu"></span>
+  <span id="stareEcran" class="estompat"></span>
+  <button id="btnBiserica" class="buton" type="button"><span class="lung">Conectează biserica</span><span class="scurt">Biserica</span></button>
+  <button id="btnEcran" class="buton" type="button"><span class="lung">Deschide ecranul de proiecție</span><span class="scurt">Ecran</span></button>
+</header>
+
+<main>
+  <section class="panou" id="panouAscultare">
+    <h2>Ascultare</h2>
+    <button id="btnMic" class="buton mare principal" type="button">Pornește ascultarea</button>
+    <div id="stareMic" class="stare">Microfonul este oprit.</div>
+    <label class="sursa">Sursă audio
+      <select id="sursaAudio"><option value="">Microfonul implicit (din Windows)</option></select>
+    </label>
+    <div class="nivel" title="Nivelul sunetului: verde = bine, galben = prea slab, roșu = prea tare"><div id="nivelBara"></div></div>
+    <label class="comutator" title="Bifat: pentru microfonul laptopului, când sunetul iese și din difuzoare. Nebifat: pentru cablul de la mixer sau un video."><input type="checkbox" id="optEcou"> <span>Anulare ecou (microfonul laptopului)</span></label>
+
+    <label class="comutator"><input type="checkbox" id="optAuto"> <span>Afișează automat versetul rostit</span></label>
+    <label class="comutator"><input type="checkbox" id="optCitate"> <span>Recunoaște și versete citate fără referință</span></label>
+    <label class="comutator"><input type="checkbox" id="optTranscriere"> <span>Arată textul auzit (doar pentru probe)</span></label>
+
+    <div id="zonaTranscriere" hidden>
+      <h3>Ce se aude</h3>
+      <div id="transcriere" class="transcriere"><span class="estompat">Aici apare textul recunoscut.</span></div>
+    </div>
+
+    <h3>Referințe detectate</h3>
+    <div id="detectii" class="lista"><div class="gol">Încă nimic.</div></div>
+
+    <h3>Probă fără microfon</h3>
+    <form id="formProba">
+      <input id="proba" type="text" placeholder="Scrie o frază: „Ioan capitolul 3 versetul 16”" autocomplete="off">
+    </form>
+  </section>
+
+  <section class="panou centru">
+    <div class="cautare">
+      <input id="cauta" type="text" placeholder="Caută: „ioan 3 16”, „1cor 13 4-7” sau cuvinte din verset   ( / )" autocomplete="off" spellcheck="false">
+      <div id="sugestii" class="sugestii" hidden></div>
+    </div>
+
+    <div class="scena">
+      <div class="cadru"><iframe id="previz" src="ecran.html?previz=1" title="Previzualizare ecran" tabindex="-1"></iframe></div>
+      <div id="insemnLive" class="insemn">ASCUNS</div>
+    </div>
+
+    <div class="comenzi">
+      <button id="btnInapoi" class="buton" type="button" title="Săgeată stânga / PageUp">◀ Anterior</button>
+      <div id="refCurenta" class="refCurenta">—</div>
+      <button id="btnInainte" class="buton" type="button" title="Săgeată dreapta / PageDown / Spațiu">Următor ▶</button>
+      <button id="btnAscunde" class="buton" type="button" title="Tasta B">Ascunde</button>
+    </div>
+    <p class="estompat mic centrat">Versetul de pe ecran ajunge în același timp pe telefoanele invitaților, în Biblia limbii lor.</p>
+
+    <div class="aspect">
+      <label>Fundal
+        <select id="temaFundal">
+          <option value="negru">Negru</option>
+          <option value="albastru">Albastru</option>
+          <option value="alb">Alb</option>
+          <option value="verde">Verde (pentru OBS / live)</option>
+        </select>
+      </label>
+      <label>Poziție
+        <select id="temaPozitie">
+          <option value="centru">Tot ecranul</option>
+          <option value="jos">Bandă jos</option>
+        </select>
+      </label>
+      <label>Font
+        <select id="temaFont">
+          <option value="sans">Simplu</option>
+          <option value="serif">Cu serife</option>
+        </select>
+      </label>
+      <label>A doua limbă
+        <select id="temaLimba2">
+          <option value="">Fără</option>
+          <option value="fr">Franceză (Segond 1910)</option>
+          <option value="nl">Neerlandeză (Statenvertaling)</option>
+          <option value="de">Germană (Luther 1912)</option>
+          <option value="en">Engleză (BSB)</option>
+          <option value="es">Spaniolă (Reina-Valera 1909)</option>
+        </select>
+      </label>
+      <label>Mărime <input id="temaScara" type="range" min="0.6" max="1.5" step="0.05"></label>
+      <label class="comutator"><input type="checkbox" id="temaNumere"> <span>Numere versete</span></label>
+    </div>
+    <div class="scurtaturi"><b>Taste:</b> → următorul · ← anteriorul · B ascunde/arată · / căutare · pe ecran: F = ecran complet</div>
+  </section>
+
+  <section class="panou" id="panouTraducere">
+    <h2>Traducere pentru invitați</h2>
+    <label class="comutator"><input type="checkbox" id="optSubtitrare"> <span>Pornește traducerea pe telefoane (cod QR)</span></label>
+    <div class="limbi" id="limbi" hidden>
+      <span>Limbi:</span>
+      <label><input type="checkbox" value="fr" checked> FR</label>
+      <label><input type="checkbox" value="nl" checked> NL</label>
+      <label><input type="checkbox" value="de" checked> DE</label>
+      <label><input type="checkbox" value="en" checked> EN</label>
+      <label><input type="checkbox" value="es" checked> ES</label>
+    </div>
+    <label class="optiune">Traduce pe fraze, după
+      <select id="optIntarziere">
+        <option value="1">1 secundă (cel mai rapid)</option>
+        <option value="2">2 secunde</option>
+        <option value="3">3 secunde</option>
+        <option value="5">5 secunde (fraze mai lungi)</option>
+      </select>
+    </label>
+    <div id="stareSub" class="stare"></div>
+    <div id="zonaQR" class="zonaQR" hidden>
+      <div id="qrMic" class="qr"></div>
+      <div class="qrDreapta">
+        <div class="codMare" id="codAcces"></div>
+        <div id="linkSub" class="link"></div>
+        <div class="qrButoane">
+          <button id="btnCopiazaLink" class="buton mic" type="button">Copiază linkul</button>
+          <a id="btnQRMare" class="buton mic" target="_blank" rel="noopener">Cod QR mare</a>
+        </div>
+      </div>
+    </div>
+    <div id="invitati" class="invitati" hidden></div>
+    <div id="ultimSub" class="ultimSub" hidden></div>
+
+  </section>
+</main>
+
+<dialog id="dlgBiserica" class="editor cont">
+  <form id="formBiserica">
+    <h2 id="contTitlu">Conectează biserica</h2>
+    <p class="estompat mic" id="contIntro">Gazda e cea care dă traducerea. Fiecare gazdă (Elim 1, Elim 2…) primește propriul cod, ca invitații să nu se încurce între săli.</p>
+    <div id="contFormular">
+      <label>Numele bisericii<input id="contBiserica" type="text" autocomplete="organization" maxlength="60" placeholder="ex. Biserica Elim"></label>
+      <label>Adresa de e-mail<input id="contEmail" type="email" autocomplete="email" maxlength="120" placeholder="nume@exemplu.ro"></label>
+      <label>Numele gazdei / sălii<input id="contGazda" type="text" autocomplete="off" maxlength="30" placeholder="ex. Elim 1"></label>
+    </div>
+    <div id="contConectat" hidden>
+      <div class="contRand"><span class="estompat">Biserica</span><b id="contVBiserica"></b></div>
+      <div class="contRand"><span class="estompat">E-mail</span><b id="contVEmail"></b></div>
+      <div class="contRand"><span class="estompat">Gazda</span><b id="contVGazda"></b></div>
+      <div class="contRand"><span class="estompat">Codul pentru invitați</span><b id="contVCod" class="codMare"></b></div>
+      <p class="estompat mic">Codul rămâne același la fiecare slujbă. Invitații deschid <b id="contLink"></b> și scriu codul (sau scanează codul QR).</p>
+    </div>
+    <div id="contStare" class="stare"></div>
+    <div class="editorButoane">
+      <button type="button" id="btnCodNou" class="buton discret" hidden>Cod nou</button>
+      <button type="button" id="btnDeconectare" class="buton discret" hidden>Deconectează</button>
+      <span class="spatiu"></span>
+      <button type="button" id="btnInchideCont" class="buton">Închide</button>
+      <button type="submit" id="btnSalveazaCont" class="buton principal">Conectează</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="/src/operator.js"></script>
+</body>
+</html>
