@@ -217,8 +217,8 @@ function onMessage(m) {
     addLine(m, true);
   } else if (m.t === 'partial') {
     current.textContent = m.text || '…';
-    current.hidden = false;
-    empty.hidden = true;
+    current.hidden = !m.text;
+    if (m.text) empty.hidden = true;
     afterChange();
   } else if (m.t === 'verse') {
     showVerse(m.verse, true);

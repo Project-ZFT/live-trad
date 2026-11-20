@@ -226,6 +226,10 @@ export function createLive(hooks) {
     const sig = v ? v.key + '|' + v.textRo.length : '';
     const old = S.lastVerse ? S.lastVerse.key + '|' + S.lastVerse.textRo.length : '';
     S.lastVerse = v;
+    if (S.relay && v) {
+      S.relay.typing(false);
+      S.relay.langsInUse().forEach((lang) => S.relay.partial(lang, ''));
+    }
     if (sig === old || !S.phones || !S.relay) return;
     S.relay.langsInUse().forEach(pushVerse);
   }

@@ -10,7 +10,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        ecran: resolve(__dirname, 'ecran.html'),
         qr: resolve(__dirname, 'qr.html'),
         join: resolve(__dirname, 'join/index.html'),
       },
