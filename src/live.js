@@ -7,9 +7,9 @@ import * as Bibles from "./bibles.js";
 
 const SOURCE = "ro";
 const MAX_LEN = 280; // longer lines are split
-const MIN_WORDS = 4; // shorter chunks appear promptly during continuous speech
-const UNSTABLE_TAIL = 2; // keep only the newest recognition tail unsent
-const MAX_WORDS = 20; // prevent a continuous phrase becoming too long
+const MIN_WORDS = 3;
+const UNSTABLE_TAIL = 1;
+const MAX_WORDS = 12;
 const STRONG = new Set([
     "dar",
     "insa",
@@ -301,7 +301,7 @@ export function createLive(hooks) {
         if (!working() || P.key === null) return;
         const open = P.words.length - P.sent;
         const age = Date.now() - P.since,
-            wait = S.delay * 1000;
+            wait = 0.45 * 1000;
         if (
             open >= MIN_WORDS + UNSTABLE_TAIL &&
             (age >= wait || open >= MAX_WORDS)
@@ -309,7 +309,7 @@ export function createLive(hooks) {
             const k = cutPoint(
                 P.words,
                 P.sent,
-                age >= wait + 3000 || open >= MAX_WORDS,
+                age >= wait + 900 || open >= MAX_WORDS,
             );
             if (k) {
                 sendLine(P.words.slice(P.sent, k).join(" "));
@@ -323,8 +323,9 @@ export function createLive(hooks) {
     function heard(text, final, key) {
         if (!working() || !text) return;
         const words = text.trim().split(/\s+/).filter(Boolean);
-        if (key !== P.key) {
-            P.key = key;
+        const session = String(key).split(":")[0];
+        if (session !== P.key) {
+            P.key = session;
             P.sent = 0;
             P.since = Date.now();
         }

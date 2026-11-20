@@ -7,8 +7,7 @@ const T = {
     title: 'Live vertaling', joinTitle: 'Volg de dienst in je eigen taal', joinText: 'Typ de code die de kerk je geeft (of scan de QR-code).',
     code: 'Code', join: 'Deelnemen', connecting: 'Verbinden…', notFound: 'Deze code is (nog) niet actief. Controleer de code of wacht tot de vertaling start – we proberen het automatisch opnieuw.',
     offline: 'Geen verbinding… opnieuw proberen', choose: 'Kies je taal', connectedTo: 'Verbonden met', waiting: 'Wachten…', live: 'Live', paused: 'Pauze',
-    listen: '🎧 Luister naar de vertaling', stop: '⏸ Geluid uit', hint: 'Sluit je oortjes aan en laat dit scherm aan. De tekst wordt voorgelezen door een computerstem.',
-    speed: 'Snelheid', readVerses: 'Bijbelverzen ook voorlezen', newest: '↓ Nieuwste', footer: 'Automatische vertaling uit het Roemeens – kan fouten bevatten.',
+    listen: '🎧 Luister naar de vertaling', stop: '⏸ Geluid uit', speed: 'Snelheid', readVerses: 'Bijbelverzen ook voorlezen', newest: '↓ Nieuwste', footer: 'Automatische vertaling uit het Roemeens – kan fouten bevatten.',
     language: 'Taal', otherCode: 'Andere code', emptyWait: 'Wachten op de spreker…', emptySmall: 'De vertaling verschijnt hier automatisch.',
     audioOn: 'Het geluid staat aan.', noTTS: 'Deze telefoon kan geen tekst voorlezen. Je kunt de tekst wel lezen.', badCode: 'Typ de code (minstens 4 tekens).', auto: 'automatisch vertaald',
     notOffered: 'Deze taal wordt hier (nog) niet aangeboden. Kies een andere taal.', bible: 'Bijbel', pickTitle: 'Kies je taal',
@@ -17,8 +16,7 @@ const T = {
     title: 'Traduction en direct', joinTitle: 'Suivez le culte dans votre langue', joinText: 'Tapez le code donné par l’église (ou scannez le code QR).',
     code: 'Code', join: 'Rejoindre', connecting: 'Connexion…', notFound: 'Ce code n’est pas (encore) actif. Vérifiez le code ou attendez que la traduction commence – nouvel essai automatique.',
     offline: 'Pas de connexion… nouvel essai', choose: 'Choisissez votre langue', connectedTo: 'Connecté à', waiting: 'En attente…', live: 'En direct', paused: 'En pause',
-    listen: '🎧 Écouter la traduction', stop: '⏸ Couper le son', hint: 'Branchez vos écouteurs et laissez l’écran allumé. Le texte est lu par une voix de synthèse.',
-    speed: 'Vitesse', readVerses: 'Lire aussi les versets bibliques', newest: '↓ Plus récent', footer: 'Traduction automatique du roumain – peut contenir des erreurs.',
+    listen: '🎧 Écouter la traduction', stop: '⏸ Couper le son', speed: 'Vitesse', readVerses: 'Lire aussi les versets bibliques', newest: '↓ Plus récent', footer: 'Traduction automatique du roumain – peut contenir des erreurs.',
     language: 'Langue', otherCode: 'Autre code', emptyWait: 'En attente de l’orateur…', emptySmall: 'La traduction apparaît ici automatiquement.',
     audioOn: 'Le son est activé.', noTTS: 'Ce téléphone ne peut pas lire le texte à voix haute. Vous pouvez toujours le lire.', badCode: 'Tapez le code (au moins 4 caractères).', auto: 'traduit automatiquement',
     notOffered: 'Cette langue n’est pas (encore) proposée ici. Choisissez-en une autre.', bible: 'Bible', pickTitle: 'Choisissez votre langue',
@@ -27,8 +25,7 @@ const T = {
     title: 'Live translation', joinTitle: 'Follow the service in your language', joinText: 'Type the code the church gives you (or scan the QR code).',
     code: 'Code', join: 'Join', connecting: 'Connecting…', notFound: 'This code is not active (yet). Check the code or wait until the translation starts – retrying automatically.',
     offline: 'No connection… retrying', choose: 'Choose your language', connectedTo: 'Connected to', waiting: 'Waiting…', live: 'Live', paused: 'Paused',
-    listen: '🎧 Listen to the translation', stop: '⏸ Audio off', hint: 'Plug in your earphones and keep this screen on. The text is read aloud by a computer voice.',
-    speed: 'Speed', readVerses: 'Also read Bible verses aloud', newest: '↓ Newest', footer: 'Automatic translation from Romanian – may contain mistakes.',
+    listen: '🎧 Listen to the translation', stop: '⏸ Audio off', speed: 'Speed', readVerses: 'Also read Bible verses aloud', newest: '↓ Newest', footer: 'Automatic translation from Romanian – may contain mistakes.',
     language: 'Language', otherCode: 'Other code', emptyWait: 'Waiting for the speaker…', emptySmall: 'The translation appears here automatically.',
     audioOn: 'Audio is on.', noTTS: 'This phone cannot read text aloud. You can still read it.', badCode: 'Type the code (at least 4 characters).', auto: 'automatic translation',
     notOffered: 'This language is not offered here (yet). Please choose another one.', bible: 'Bible', pickTitle: 'Choose your language',
@@ -37,8 +34,7 @@ const T = {
     title: 'Live-Übersetzung', joinTitle: 'Verfolge den Gottesdienst in deiner Sprache', joinText: 'Gib den Code ein, den die Gemeinde dir gibt (oder scanne den QR-Code).',
     code: 'Code', join: 'Beitreten', connecting: 'Verbinden…', notFound: 'Dieser Code ist (noch) nicht aktiv. Prüfe den Code oder warte, bis die Übersetzung beginnt – neuer Versuch läuft automatisch.',
     offline: 'Keine Verbindung… neuer Versuch', choose: 'Wähle deine Sprache', connectedTo: 'Verbunden mit', waiting: 'Warten…', live: 'Live', paused: 'Pause',
-    listen: '🎧 Übersetzung anhören', stop: '⏸ Ton aus', hint: 'Stecke deine Kopfhörer ein und lass den Bildschirm an. Der Text wird von einer Computerstimme vorgelesen.',
-    speed: 'Tempo', readVerses: 'Bibelverse auch vorlesen', newest: '↓ Neueste', footer: 'Automatische Übersetzung aus dem Rumänischen – kann Fehler enthalten.',
+      listen: '🎧 Übersetzung anhören', stop: '⏸ Ton aus', speed: 'Tempo', readVerses: 'Bibelverse auch vorlesen', newest: '↓ Neueste', footer: 'Automatische Übersetzung aus dem Rumänischen – kann Fehler enthalten.',
     language: 'Sprache', otherCode: 'Anderer Code', emptyWait: 'Warten auf den Prediger…', emptySmall: 'Die Übersetzung erscheint hier automatisch.',
     audioOn: 'Der Ton ist an.', noTTS: 'Dieses Telefon kann keinen Text vorlesen. Du kannst ihn trotzdem lesen.', badCode: 'Gib den Code ein (mindestens 4 Zeichen).', auto: 'automatisch übersetzt',
     notOffered: 'Diese Sprache wird hier (noch) nicht angeboten. Wähle eine andere.', bible: 'Bibel', pickTitle: 'Wähle deine Sprache',
@@ -47,8 +43,7 @@ const T = {
     title: 'Traducción en directo', joinTitle: 'Sigue el culto en tu idioma', joinText: 'Escribe el código que te da la iglesia (o escanea el código QR).',
     code: 'Código', join: 'Entrar', connecting: 'Conectando…', notFound: 'Este código no está activo (todavía). Revisa el código o espera a que empiece la traducción – reintentando automáticamente.',
     offline: 'Sin conexión… reintentando', choose: 'Elige tu idioma', connectedTo: 'Conectado a', waiting: 'Esperando…', live: 'En directo', paused: 'En pausa',
-    listen: '🎧 Escuchar la traducción', stop: '⏸ Quitar el audio', hint: 'Conecta tus auriculares y deja la pantalla encendida. Una voz sintética lee el texto.',
-    speed: 'Velocidad', readVerses: 'Leer también los versículos', newest: '↓ Lo más nuevo', footer: 'Traducción automática del rumano – puede contener errores.',
+    listen: '🎧 Escuchar la traducción', stop: '⏸ Quitar el audio', speed: 'Velocidad', readVerses: 'Leer también los versículos', newest: '↓ Lo más nuevo', footer: 'Traducción automática del rumano – puede contener errores.',
     language: 'Idioma', otherCode: 'Otro código', emptyWait: 'Esperando al predicador…', emptySmall: 'La traducción aparece aquí automáticamente.',
     audioOn: 'El audio está activado.', noTTS: 'Este teléfono no puede leer texto en voz alta. Aún puedes leerlo.', badCode: 'Escribe el código (al menos 4 caracteres).', auto: 'traducción automática',
     notOffered: 'Este idioma no se ofrece aquí (todavía). Elige otro.', bible: 'Biblia', pickTitle: 'Elige tu idioma',
@@ -57,8 +52,7 @@ const T = {
     title: 'Traducere live', joinTitle: 'Urmărește slujba în limba ta', joinText: 'Scrie codul primit de la biserică (sau scanează codul QR).',
     code: 'Cod', join: 'Intră', connecting: 'Mă conectez…', notFound: 'Codul nu este (încă) activ. Verifică codul sau așteaptă să înceapă traducerea – reîncerc automat.',
     offline: 'Fără legătură… reîncerc', choose: 'Alege limba', connectedTo: 'Conectat la', waiting: 'Așteptăm…', live: 'Live', paused: 'Pauză',
-    listen: '🎧 Ascultă', stop: '⏸ Oprește sunetul', hint: 'Conectează căștile și lasă ecranul aprins. Textul este citit de o voce sintetică.',
-    speed: 'Viteză', readVerses: 'Citește și versetele', newest: '↓ Cele mai noi', footer: 'Text recunoscut automat – poate conține greșeli.',
+    listen: '🎧 Ascultă', stop: '⏸ Oprește sunetul', speed: 'Viteză', readVerses: 'Citește și versetele', newest: '↓ Cele mai noi', footer: 'Text recunoscut automat – poate conține greșeli.',
     language: 'Limba', otherCode: 'Alt cod', emptyWait: 'Așteptăm vorbitorul…', emptySmall: 'Textul apare aici automat.',
     audioOn: 'Sunetul este pornit.', noTTS: 'Acest telefon nu poate citi textul cu voce tare. Îl poți citi.', badCode: 'Scrie codul (cel puțin 4 caractere).', auto: 'traducere automată',
     notOffered: 'Această limbă nu este (încă) oferită aici. Alege alta.', bible: 'Biblia', pickTitle: 'Alege limba',
@@ -95,7 +89,6 @@ function texts() {
   $('tGolMic').textContent = t('emptySmall');
   $('jos').textContent = t('newest');
   $('tSubsol').textContent = lang === 'ro' ? T.ro.footer : t('footer');
-  $('indiciuAudio').textContent = t('hint');
   $('btnLimba').textContent = (lang ? LANGS[lang].short + ' · ' : '') + t('language');
   listenButton();
   drawStatus();
@@ -254,17 +247,7 @@ function addLine(l, fresh) {
   if (!l || !l.text) return;
   empty.hidden = true;
   const previous = [...list.querySelectorAll('p:not(#curent)')].at(-1);
-  if (previous) {
-    const oldText = previous.textContent;
-    if (oldText === l.text) return;
-    if (l.text.startsWith(oldText)) {
-      previous.textContent = l.text;
-      previous.classList.remove('vechi');
-      afterChange();
-      return;
-    }
-    if (oldText.startsWith(l.text)) return;
-  }
+  if (previous && previous.textContent === l.text) return;
   const p = document.createElement('p');
   p.textContent = l.text;
   list.insertBefore(p, current);
@@ -415,10 +398,9 @@ function listenButton() {
   b.textContent = listening ? t('stop') : t('listen');
   b.classList.toggle('pornit', listening);
   $('optiuniAudio').hidden = !listening;
-  $('indiciuAudio').hidden = listening;
 }
 $('btnAsculta').addEventListener('click', () => {
-  if (!synth) { $('indiciuAudio').hidden = false; $('indiciuAudio').textContent = t('noTTS'); return; }
+  if (!synth) { connState = 'offline'; drawStatus(); return; }
   listening = !listening;
   stopSpeaking();
   if (listening) unlockAudio(true);
