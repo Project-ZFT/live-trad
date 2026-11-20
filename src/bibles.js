@@ -43,7 +43,7 @@ export function passage(lang, r) {
   return { ref, text: parts.join(' '), version: d.name };
 }
 
-/** Verse by verse, for the big screen: { ref, verses: [{ n, t }] } with the local verse numbers. */
+/** Verse by verse, with the local verse numbers for guest reading and audio. */
 export function verses(lang, r) {
   const d = get(lang);
   const p = passage(lang, r);

@@ -1,5 +1,4 @@
-// Host page: listens to the preacher (Romanian), shows the verses on the projection screen as soon as they are heard,
-// translates what is said for the guests' phones, and sends them the same verses from the Bible of their own language.
+// Host page: listens to the preacher (Romanian), detects verses and translates what is said for the guests' phones.
 import * as Ref from './references.js';
 import * as Quotes from './quotes.js';
 import * as Account from './account.js';
@@ -25,44 +24,25 @@ const st = {
   until: null, // last verse of a requested passage that was longer than MAX_VERSES
   visible: false,
   ctx: null, // last reference (shown or detected), for "versetul 17"
-  auto: store.get('auto', true),
   transcript: store.get('transcriere', false),
   quotes: store.get('citate', true),
-  theme: Object.assign({ fundal: 'negru', pozitie: 'centru', font: 'sans', scara: 1, numere: true, limba2: '' }, store.get('tema2', {})),
   detected: [],
 };
 
 const verseText = (b, c, v) => B[b][c - 1][v - 1];
 const verseCount = (b, c) => B[b][c - 1].length;
 
-// ───────── what fits on one screen ─────────
-const second = () => (st.theme.limba2 && Bibles.get(st.theme.limba2) ? st.theme.limba2 : null);
-function passageEnd(b, c, from, limit) {
-  const low = st.theme.pozitie === 'jos', two = !!second();
-  const budget = (low ? 230 : 400) * (two ? 0.55 : 1), most = low || two ? 2 : 4;
-  let to = from, chars = verseText(b, c, from).length;
-  while (to < limit && to - from + 1 < most && chars + verseText(b, c, to + 1).length <= budget) {
-    chars += verseText(b, c, to + 1).length;
-    to++;
-  }
-  return to;
-}
-function loadSecond() {
-  const l = st.theme.limba2;
-  if (l && !Bibles.get(l)) Bibles.load(l).then(reflow);
-}
-function reflow() {
-  const L = st.live;
-  if (L) { const keep = st.visible; show({ b: L.b, c: L.c, v: L.from, v2: st.until || L.to }); st.visible = keep; update(); } else send();
+function label(el, long, short) {
+  el.innerHTML = '<span class="lung">' + esc(long) + '</span><span class="scurt">' + esc(short) + '</span>';
 }
 
-// ───────── the verse on screen (and on the guests' phones) ─────────
+// ───────── the verse selected or detected (and on the guests' phones) ─────────
 function show(r, source) {
   if (!B) return;
   const max = verseCount(r.b, r.c);
   const from = Math.min(r.v || 1, max);
   const until = r.v2 ? Math.min(r.v2, max) : from;
-  const to = passageEnd(r.b, r.c, from, until);
+  const to = Math.min(until, from + 3);
   st.live = { b: r.b, c: r.c, from, to };
   st.until = until > to ? until : null;
   st.visible = true;
@@ -76,7 +56,7 @@ function next() {
   if (L.to < verseCount(L.b, L.c)) {
     const from = L.to + 1;
     const limit = st.until && st.until >= from ? st.until : from;
-    const to = passageEnd(L.b, L.c, from, limit);
+    const to = Math.min(limit, from + 3);
     st.live = { b: L.b, c: L.c, from, to };
     if (!st.until || to >= st.until) st.until = null;
   } else if (L.c < B[L.b].length) {
@@ -87,104 +67,27 @@ function next() {
   afterMove();
 }
 
-function prev() {
-  const L = st.live;
-  if (!L) return;
-  st.until = null;
-  if (L.from > 1) st.live = { b: L.b, c: L.c, from: L.from - 1, to: L.from - 1 };
-  else if (L.c > 1) { const n = verseCount(L.b, L.c - 1); st.live = { b: L.b, c: L.c - 1, from: n, to: n }; }
-  else if (L.b > 0) { const c = B[L.b - 1].length, n = verseCount(L.b - 1, c); st.live = { b: L.b - 1, c, from: n, to: n }; }
-  else return;
-  afterMove();
-}
-
 function afterMove() {
   st.visible = true;
   st.ctx = { b: st.live.b, c: st.live.c };
   update();
 }
 
-function hide(force) {
-  if (!st.live) return;
-  st.visible = force === true ? false : !st.visible;
-  update();
-}
-
-// ───────── link with the projection screen ─────────
-const sessionId = Math.random().toString(36).slice(2);
-let msgCount = 0, screenWin = null, channel = null;
-try { channel = new BroadcastChannel('cuvant-live'); } catch (e) { /* direct link only */ }
-
-function post(m, preview) {
-  if (screenWin && !screenWin.closed) { try { screenWin.postMessage(m, '*'); } catch (e) { /* closed */ } }
-  if (channel) { try { channel.postMessage(m); } catch (e) { /* ignored */ } }
-  try { $('previz').contentWindow.postMessage(preview || m, '*'); } catch (e) { /* still loading */ }
-}
-
+// ───────── verse relay for the guests ─────────
 function send() {
   const L = st.live;
-  const m = { tip: 'stare', id: sessionId + '-' + ++msgCount, vizibil: st.visible && !!L, tema: st.theme, subEcran: false, ref: '', versete: [] };
-  if (L) {
+  if (L && st.visible) {
     const refObj = { b: L.b, c: L.c, v: L.from, v2: L.to };
-    m.ref = Ref.format(refObj);
-    for (let v = L.from; v <= L.to; v++) m.versete.push({ n: v, t: verseText(L.b, L.c, v) });
-    m.cheie = L.b + ':' + L.c + ':' + L.from + '-' + L.to;
-    const l2 = second();
-    const two = l2 && Bibles.verses(l2, refObj);
-    if (two) { m.versete2 = two.verses; m.ref2 = two.ref; }
-    // the guests get the verse at the same moment, each from the Bible of their language
-    live.verse(m.vizibil ? { key: m.cheie, refRo: m.ref, textRo: m.versete.map((x) => x.t).join(' '), refObj } : null);
+    const key = L.b + ':' + L.c + ':' + L.from + '-' + L.to;
+    const ref = Ref.format(refObj);
+    const textRo = Array.from({ length: L.to - L.from + 1 }, (_, i) => verseText(L.b, L.c, L.from + i)).join(' ');
+    live.verse({ key, refRo: ref, textRo, refObj });
   } else live.verse(null);
-  // the preview shows the verse even when the screen is hidden
-  post(m, Object.assign({}, m, { id: m.id + 'p', vizibil: !!L }));
 }
-
-function openScreen() {
-  if (screenWin && !screenWin.closed) { screenWin.focus(); return; }
-  screenWin = window.open('ecran.html', 'cuvant-ecran', 'popup,width=1280,height=720');
-  if (!screenWin) {
-    $('stareEcran').textContent = 'Browserul a blocat fereastra – permite ferestrele pop-up pentru această pagină.';
-    return;
-  }
-  // move it to the second monitor (projector) when there is one
-  if ('getScreenDetails' in window) {
-    window.getScreenDetails().then((d) => {
-      const other = d.screens.find((x) => x !== d.currentScreen);
-      if (other && screenWin && !screenWin.closed) {
-        screenWin.moveTo(other.availLeft, other.availTop);
-        screenWin.resizeTo(other.availWidth, other.availHeight);
-      }
-    }).catch(() => { /* no permission: moved by hand */ });
-  }
-  screenState();
-}
-function screenState() {
-  const open = screenWin && !screenWin.closed;
-  $('stareEcran').textContent = open ? 'Ecran deschis – mută-l pe proiector și apasă F' : '';
-  label($('btnEcran'), open ? 'Adu ecranul în față' : 'Deschide ecranul de proiecție', 'Ecran');
-}
-function received(d) {
-  if (!d) return;
-  if (d.tip === 'gata') { send(); screenState(); } else if (d.tip === 'tasta') key(d.tasta);
-}
-window.addEventListener('message', (e) => received(e.data));
-if (channel) channel.onmessage = (e) => received(e.data);
-setInterval(screenState, 2000);
 
 // ───────── drawing ─────────
-function label(el, long, short) {
-  el.innerHTML = '<span class="lung">' + esc(long) + '</span><span class="scurt">' + esc(short) + '</span>';
-}
-
 function update() {
   send();
-  const L = st.live;
-  $('refCurenta').textContent = L ? Ref.format({ b: L.b, c: L.c, v: L.from, v2: L.to }) : '—';
-  const on = st.visible && !!L;
-  const badge = $('insemnLive');
-  badge.textContent = on ? 'PE ECRAN' : 'ASCUNS';
-  badge.classList.toggle('live', on);
-  $('btnAscunde').textContent = on || !L ? 'Ascunde' : 'Arată';
   drawLists();
 }
 
@@ -192,73 +95,18 @@ function excerpt(r) {
   const t = verseText(r.b, r.c, r.v || 1);
   return t.length > 70 ? t.slice(0, 70) + '…' : t;
 }
-const onScreen = (r) => { const L = st.live; return st.visible && !!L && L.b === r.b && L.c === r.c && L.from === (r.v || 1); };
+const activeVerse = (r) => { const L = st.live; return st.visible && !!L && L.b === r.b && L.c === r.c && L.from === (r.v || 1); };
 
 function drawLists() {
   if (!B) return;
   $('detectii').innerHTML = st.detected.length
-    ? st.detected.map((d, i) => `<div class="rand ${onScreen(d.r) ? 'pe-ecran' : ''}" data-i="${i}"><div class="corp"><div class="titlu">${esc(Ref.format(d.r))}</div><div class="extras">${d.text ? '„' + esc(d.text) + '”' : esc(excerpt(d.r))}</div></div><span class="eticheta">${d.kind ? d.kind + ' · ' : ''}${d.time}</span></div>`).join('')
+    ? st.detected.map((d, i) => `<div class="rand ${activeVerse(d.r) ? 'activ' : ''}" data-i="${i}"><div class="corp"><div class="titlu">${esc(Ref.format(d.r))}</div><div class="extras">${d.text ? '„' + esc(d.text) + '”' : esc(excerpt(d.r))}</div></div><span class="eticheta">${d.kind ? d.kind + ' · ' : ''}${d.time}</span></div>`).join('')
     : '<div class="gol">Încă nimic.</div>';
 }
 $('detectii').addEventListener('click', (e) => {
   const row = e.target.closest('.rand');
   if (row) show(st.detected[+row.dataset.i].r, 'voce');
 });
-
-// ───────── search ─────────
-let INDEX = null;
-function index() {
-  if (INDEX || !B) return INDEX || [];
-  INDEX = [];
-  for (let b = 0; b < B.length; b++) for (let c = 0; c < B[b].length; c++) for (let v = 0; v < B[b][c].length; v++) {
-    INDEX.push({ b, c: c + 1, v: v + 1, t: Ref.plain(B[b][c][v]) });
-  }
-  return INDEX;
-}
-
-let suggestions = [], picked = 0;
-function search(q) {
-  const out = [];
-  q = q.trim();
-  if (!q || !B) return out;
-  const ctx = st.ctx ? { b: st.ctx.b, c: st.ctx.c } : null;
-  Ref.find(q, ctx, { typed: true }).refs.forEach((r) => out.push(r));
-  const words = Ref.plain(q).replace(/[^a-z0-9 ]+/g, ' ').split(' ').filter((w) => w.length >= 2);
-  if (!out.length && words.length && words.join('').length >= 3) {
-    const phrase = words.join(' ');
-    const exact = [], rest = [];
-    for (const e of index()) {
-      if (!words.every((w) => e.t.includes(w))) continue;
-      (e.t.includes(phrase) ? exact : rest).push({ b: e.b, c: e.c, v: e.v });
-      if (exact.length >= 8) break;
-    }
-    exact.concat(rest).slice(0, 8).forEach((r) => out.push(r));
-  }
-  return out;
-}
-
-function drawSuggestions() {
-  const el = $('sugestii');
-  el.hidden = !suggestions.length;
-  el.innerHTML = suggestions.map((r, i) => `<div class="sugestie ${i === picked ? 'ales' : ''}" data-i="${i}"><b>${esc(Ref.format(r))}</b><span>${esc(verseText(r.b, r.c, r.v || 1))}</span></div>`).join('');
-}
-$('cauta').addEventListener('input', (e) => { suggestions = search(e.target.value); picked = 0; drawSuggestions(); });
-$('cauta').addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowDown' && suggestions.length) { picked = (picked + 1) % suggestions.length; drawSuggestions(); e.preventDefault(); }
-  else if (e.key === 'ArrowUp' && suggestions.length) { picked = (picked - 1 + suggestions.length) % suggestions.length; drawSuggestions(); e.preventDefault(); }
-  else if (e.key === 'Enter' && suggestions[picked]) { pickSuggestion(picked); e.preventDefault(); }
-  else if (e.key === 'Escape') { e.target.value = ''; suggestions = []; drawSuggestions(); e.target.blur(); }
-});
-$('sugestii').addEventListener('mousedown', (e) => {
-  const s = e.target.closest('.sugestie');
-  if (s) { pickSuggestion(+s.dataset.i); e.preventDefault(); }
-});
-function pickSuggestion(i) {
-  show(suggestions[i], 'căutare');
-  $('cauta').value = '';
-  suggestions = [];
-  drawSuggestions();
-}
 
 // ───────── speech recognition ─────────
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -400,7 +248,6 @@ function findQuote() {
     st.detected.length = Math.min(st.detected.length, 30);
   }
   st.ctx = { b: m.b, c: m.c };
-  if (!st.auto) { drawLists(); return; }
   if (L && st.visible && m.next && m.v === L.to + 1) next(); // the reader moved on to the next verse
   else show(r, 'citat');
 }
@@ -442,7 +289,7 @@ function findReference(key, alts, final, text) {
   if (st.detected[0] && st.detected[0].key === key) st.detected[0] = d; else st.detected.unshift(d);
   st.detected.length = Math.min(st.detected.length, 30);
   st.ctx = { b: r.b, c: r.c };
-  if (st.auto) show(ref, 'voce'); else drawLists();
+  show(ref, 'voce');
   return true;
 }
 
@@ -455,14 +302,7 @@ function tryPhrase() {
 }
 $('formProba').addEventListener('submit', (e) => { e.preventDefault(); tryPhrase(); });
 
-// ───────── buttons, options, keys ─────────
-$('btnEcran').addEventListener('click', openScreen);
-$('btnInainte').addEventListener('click', next);
-$('btnInapoi').addEventListener('click', prev);
-$('btnAscunde').addEventListener('click', () => hide());
-
-$('optAuto').checked = st.auto;
-$('optAuto').addEventListener('change', (e) => { st.auto = e.target.checked; store.set('auto', st.auto); });
+// ───────── options ─────────
 $('optCitate').checked = st.quotes;
 $('optCitate').addEventListener('change', (e) => {
   st.quotes = e.target.checked;
@@ -482,37 +322,6 @@ $('optTranscriere').addEventListener('change', (e) => {
     st.detected.forEach((d) => { d.text = ''; });
     drawLists();
   }
-});
-
-const themeFields = { temaFundal: 'fundal', temaPozitie: 'pozitie', temaFont: 'font', temaScara: 'scara', temaNumere: 'numere', temaLimba2: 'limba2' };
-Object.keys(themeFields).forEach((id) => {
-  const el = $(id), k = themeFields[id];
-  if (el.type === 'checkbox') el.checked = !!st.theme[k]; else el.value = st.theme[k];
-  el.addEventListener('input', () => {
-    st.theme[k] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? +el.value : el.value;
-    store.set('tema2', st.theme);
-    if (k === 'limba2') loadSecond();
-    if (k === 'pozitie' || k === 'limba2') reflow(); else send();
-  });
-});
-
-function key(k) {
-  if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') next();
-  else if (k === 'ArrowLeft' || k === 'PageUp') prev();
-  else if (k === 'b' || k === 'B') hide();
-  else if (k === 'Escape') hide(true);
-  else return false;
-  return true;
-}
-document.addEventListener('keydown', (e) => {
-  const t = e.target;
-  if (e.ctrlKey || e.metaKey || e.altKey) return;
-  if ($('dlgBiserica').open) return;
-  if (t.tagName === 'INPUT' && t.type !== 'checkbox' && t.type !== 'range') return;
-  if (t.tagName === 'SELECT' || t.tagName === 'TEXTAREA') return;
-  if (e.key === '/') { $('cauta').focus(); e.preventDefault(); return; }
-  if (t.tagName === 'BUTTON' && e.key === ' ') return;
-  if (key(e.key)) e.preventDefault();
 });
 
 // ───────── live translation for guests ─────────
@@ -693,9 +502,7 @@ fetch('data/biblia-ro.json').then((r) => r.json()).then((d) => {
   B = d.books;
   Ref.setShape(B);
   $('traducere').textContent = d.name;
-  loadSecond();
   update();
-  setTimeout(index, 800);
   setTimeout(prepareQuotes, 1200);
   if (store.get('subtitrare', false) && Account.load()) startPhones(false);
 }).catch(() => {

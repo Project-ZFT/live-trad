@@ -27,7 +27,7 @@
 <script type="module">
   import { qrSvg } from './src/qr.js';
   const code = (new URLSearchParams(location.search).get('c') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-  const home = new URL('join/', location.href.replace(/[^/]*$/, '')).href;
+  const home = new URL('./join/', document.baseURI).href;
   if (!code) document.getElementById('link').textContent = 'Lipsește codul.';
   else {
     document.getElementById('qr').innerHTML = qrSvg(home + '?c=' + encodeURIComponent(code));
