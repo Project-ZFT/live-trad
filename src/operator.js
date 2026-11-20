@@ -330,17 +330,30 @@ function subState(text, kind) {
   el.textContent = text;
   el.className = 'stare' + (kind ? ' ' + kind : '');
 }
+const translationPreviews = new Map();
+function drawTranslationPreviews() {
+  const el = $('ultimSub');
+  el.hidden = !translationPreviews.size;
+  el.innerHTML = [...translationPreviews].map(([lang, text]) =>
+    `<div class="traducereRand"><b>${esc(LANGS[lang] ? LANGS[lang].short : lang.toUpperCase())}</b><span>${esc(text)}</span></div>`
+  ).join('');
+}
 const live = createLive({
   onStatus: subState,
-  onPreview(t) {
-    const el = $('ultimSub');
-    el.hidden = !t;
-    el.textContent = t;
+  onPreview(lang, text) {
+    if (!lang) return;
+    if (!text) translationPreviews.delete(lang);
+    else translationPreviews.set(lang, text);
+    drawTranslationPreviews();
   },
   onGuests(counts) {
     const el = $('invitati');
     const langs = Object.keys(counts);
     const total = langs.reduce((s, l) => s + counts[l], 0);
+    for (const lang of [...translationPreviews.keys()]) {
+      if (!langs.includes(lang)) translationPreviews.delete(lang);
+    }
+    drawTranslationPreviews();
     el.hidden = !live.phones;
     el.innerHTML = total
       ? 'Invitați conectați: <b>' + total + '</b> — ' + langs.map((l) => LANGS[l].short + ' ' + counts[l]).join(' · ')
@@ -352,10 +365,7 @@ const live = createLive({
   isListening: () => listening,
 });
 
-const delay = store.get('intarziere2', 2);
-$('optIntarziere').value = String(delay);
-live.setDelay(delay);
-$('optIntarziere').addEventListener('change', (e) => { live.setDelay(+e.target.value); store.set('intarziere2', +e.target.value); });
+live.setDelay(2);
 
 const offered = () => [...document.querySelectorAll('#limbi input')].filter((x) => x.checked).map((x) => x.value);
 const savedLangs = store.get('limbi6', TRANSLATED);
@@ -403,6 +413,7 @@ function startPhones(fromClick) {
 function stopPhones() {
   live.stopPhones();
   store.set('subtitrare', false);
+  translationPreviews.clear();
   $('zonaQR').hidden = true;
   $('invitati').hidden = true;
   $('limbi').hidden = !Account.load();
@@ -498,13 +509,16 @@ accountButton();
 // ───────── start ─────────
 if (!SR) micState('Pentru recunoaștere vocală deschide pagina în Google Chrome sau Microsoft Edge.', 'eroare');
 
-fetch('data/biblia-ro.json').then((r) => r.json()).then((d) => {
+fetch(Bibles.bibleUrl('ro')).then((r) => {
+  if (!r.ok) throw new Error('Biblia a răspuns cu eroarea HTTP ' + r.status);
+  return r.json();
+}).then((d) => {
   B = d.books;
   Ref.setShape(B);
-  $('traducere').textContent = d.name;
   update();
   setTimeout(prepareQuotes, 1200);
   if (store.get('subtitrare', false) && Account.load()) startPhones(false);
-}).catch(() => {
-  micState('Nu pot încărca textul Bibliei. Reîncarcă pagina.', 'eroare');
+}).catch((e) => {
+  console.error('Bible load failed:', e);
+  micState('Nu pot încărca textul Bibliei. Verifică că folderul data este publicat și reîncarcă pagina.', 'eroare');
 });

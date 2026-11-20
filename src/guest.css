@@ -50,6 +50,8 @@ select { font: inherit; color: var(--text); background: var(--bg); border: 1px s
 .bifa input { width: 17px; height: 17px; accent-color: var(--accent); }
 .indiciu { margin: 8px 14px 0; font-size: 13px; color: var(--muted); }
 #verset { margin: 10px 14px 0; padding: 14px 16px; border: 2px solid var(--accent); border-radius: 12px; background: linear-gradient(135deg, #2b2412, #171b22); font-size: calc(var(--size) * 1.05); font-weight: 600; line-height: 1.42; white-space: pre-line; max-height: 42vh; overflow-y: auto; box-shadow: 0 10px 28px rgba(0, 0, 0, .28); }
+#verset { position: relative; }
+#verset .inchideVerset { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; padding: 0; border-radius: 50%; background: rgba(14, 17, 22, .85); color: var(--text); font-size: 20px; line-height: 1; }
 #verset b { display: block; color: var(--accent); font-size: .78em; margin-top: 6px; }
 #verset small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 #lista { flex: 1; overflow-y: auto; padding: 14px; padding-bottom: max(14px, env(safe-area-inset-bottom)); font-size: var(--size); line-height: 1.42; -webkit-overflow-scrolling: touch; overflow-wrap: anywhere; }

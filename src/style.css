@@ -100,8 +100,10 @@ input::placeholder { color: #667080; }
 a.buton { text-decoration: none; display: inline-block; }
 .invitati { font-size: 13px; color: var(--muted); }
 .invitati b { color: var(--text); }
-.ultimSub { font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-.ultimSub::before { content: "Tradus acum: "; color: var(--muted); font-style: normal; }
+.ultimSub { display: flex; flex-direction: column; gap: 6px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.traducereRand { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: start; }
+.traducereRand b { color: var(--accent); letter-spacing: .04em; }
+.traducereRand span { color: var(--text); }
 
 @media (max-width: 1080px) {
   body { height: auto; }

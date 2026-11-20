@@ -250,6 +250,8 @@ function clearLines() {
   empty.hidden = false;
   current.hidden = true;
   $('verset').hidden = true;
+  clearTimeout(verseTimer);
+  verseTimer = null;
   lastVerseSig = '';
 }
 
@@ -274,13 +276,27 @@ function typing(on) {
 }
 
 let lastVerseSig = '';
+let verseTimer = null;
 function showVerse(v, fresh) {
   const el = $('verset');
   el.hidden = !(v && v.text);
+  clearTimeout(verseTimer);
+  verseTimer = null;
   if (!v || !v.text) { lastVerseSig = ''; return; }
   el.setAttribute('role', 'note');
   el.setAttribute('aria-live', 'polite');
   el.textContent = v.text;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'inchideVerset';
+  close.textContent = '×';
+  close.setAttribute('aria-label', t('close') || 'Închide');
+  close.addEventListener('click', () => {
+    clearTimeout(verseTimer);
+    verseTimer = null;
+    el.hidden = true;
+  });
+  el.appendChild(close);
   const b = document.createElement('b');
   b.textContent = v.ref || '';
   el.appendChild(b);
@@ -297,6 +313,7 @@ function showVerse(v, fresh) {
   const sig = (v.ref || '') + '|' + v.text.length;
   if (fresh && sig !== lastVerseSig && $('citesteVersete').checked) say((v.ref ? v.ref + '. ' : '') + v.text, null, true);
   lastVerseSig = sig;
+  verseTimer = setTimeout(() => { el.hidden = true; }, 30000);
 }
 
 // text size, remembered on the phone

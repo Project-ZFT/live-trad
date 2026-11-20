@@ -48,7 +48,7 @@ export function createLive(hooks) {
     phones: false, starting: false, delay: 2,
     offered: TRANSLATED.slice(), failed: [], lastError: '', relay: null, account: null,
     queue: Promise.resolve(), translationQueue: Promise.resolve(),
-    timer: null, lastVerse: null, verseCache: new Map(),
+    timer: null, verseTimer: null, lastVerse: null, verseCache: new Map(),
   };
   const translators = new Map(); // lang → Translator
   const preparing = new Map(); // lang → Promise
@@ -152,7 +152,7 @@ export function createLive(hooks) {
           const t = await translate(piece, lang);
           if (!t) continue;
           if (S.phones && S.relay) S.relay.line(lang, t);
-          if (hooks.onPreview) hooks.onPreview(LANGS[lang].short + ': ' + t);
+          if (hooks.onPreview) hooks.onPreview(lang, t);
         }
       }
     });
@@ -171,7 +171,10 @@ export function createLive(hooks) {
     Promise.all(needed().map(async (lang) => {
       const t = await translate(text, lang);
       // dropped if that part was meanwhile sent as a finished line
-      if (t && P.key === key && P.sent === from && S.relay) S.relay.partial(lang, t);
+      if (t && P.key === key && P.sent === from && S.relay) {
+        S.relay.partial(lang, t);
+        if (hooks.onPreview) hooks.onPreview(lang, t);
+      }
     })).catch(() => {}).finally(() => { partial.busy = false; });
   }
   function tick() {
@@ -237,7 +240,10 @@ export function createLive(hooks) {
   // a verse does not wait behind the phrases being translated: it goes out at once
   function pushVerse(lang) {
     const v = S.lastVerse;
-    verseFor(lang, v).then((out) => { if (S.relay && S.lastVerse === v) S.relay.verse(lang, out); })
+    verseFor(lang, v).then((out) => {
+      if (S.relay && S.lastVerse === v) S.relay.verse(lang, out);
+      if (out && hooks.onPreview) hooks.onPreview(lang, (out.ref ? out.ref + ' — ' : '') + out.text);
+    })
       .catch((e) => status('Problemă la verset: ' + (e && e.message ? e.message : e), 'eroare'));
   }
 
@@ -245,13 +251,23 @@ export function createLive(hooks) {
     const sig = v ? v.key + '|' + v.textRo.length : '';
     const old = S.lastVerse ? S.lastVerse.key + '|' + S.lastVerse.textRo.length : '';
     S.lastVerse = v;
+    clearTimeout(S.verseTimer);
+    S.verseTimer = null;
     if (S.relay && !v) {
       S.relay.typing(false);
-      S.relay.langsInUse().forEach((lang) => S.relay.verse(lang, null));
+      S.relay.langsInUse().forEach((lang) => {
+        S.relay.verse(lang, null);
+        if (hooks.onPreview) hooks.onPreview(lang, null);
+      });
     }
     if (S.relay && v) {
       S.relay.typing(false);
       S.relay.langsInUse().forEach((lang) => S.relay.partial(lang, ''));
+    }
+    if (v) {
+      S.verseTimer = setTimeout(() => {
+        if (S.lastVerse === v) verse(null);
+      }, 30000);
     }
     if (sig === old || !S.phones || !S.relay) return;
     S.relay.langsInUse().forEach(pushVerse);
@@ -295,6 +311,8 @@ export function createLive(hooks) {
   function stopPhones() {
     if (!S.phones) return;
     S.phones = false;
+    clearTimeout(S.verseTimer);
+    S.verseTimer = null;
     if (S.relay) S.relay.stop();
     S.relay = null;
     if (hooks.onGuests) hooks.onGuests({});

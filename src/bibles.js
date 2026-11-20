@@ -6,12 +6,25 @@ import { format } from './references.js';
 const loaded = new Map(); // lang → data
 const loading = new Map(); // lang → Promise
 
+export function bibleUrl(lang) {
+  const bible = LANGS[lang] && LANGS[lang].bible;
+  if (!bible) return null;
+  const root = /\/join\/(?:index\.html)?(?:[?#].*)?$/.test(location.pathname)
+    ? new URL('../', document.baseURI)
+    : new URL('./', document.baseURI);
+  return new URL(bible, root).href;
+}
+
 export function load(lang) {
   if (loaded.has(lang)) return Promise.resolve(loaded.get(lang));
   if (!loading.has(lang)) {
     const L = LANGS[lang];
     if (!L || !L.bible) return Promise.resolve(null);
-    loading.set(lang, fetch(L.bible).then((r) => r.json()).then((d) => { loaded.set(lang, d); return d; })
+    const url = bibleUrl(lang);
+    loading.set(lang, fetch(url).then((r) => {
+      if (!r.ok) throw new Error('Biblia nu este disponibilă la ' + url + ' (' + r.status + ')');
+      return r.json();
+    }).then((d) => { loaded.set(lang, d); return d; })
       .catch(() => null).finally(() => loading.delete(lang)));
   }
   return loading.get(lang);
