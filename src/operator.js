@@ -32,6 +32,10 @@ const st = {
 const verseText = (b, c, v) => B[b][c - 1][v - 1];
 const verseCount = (b, c) => B[b][c - 1].length;
 
+function label(el, long, short) {
+  el.innerHTML = '<span class="lung">' + esc(long) + '</span><span class="scurt">' + esc(short) + '</span>';
+}
+
 // ───────── the verse selected or detected (and on the guests' phones) ─────────
 function show(r, source) {
   if (!B) return;
@@ -84,8 +88,6 @@ function send() {
 // ───────── drawing ─────────
 function update() {
   send();
-  const L = st.live;
-  $('refCurenta').textContent = L ? Ref.format({ b: L.b, c: L.c, v: L.from, v2: L.to }) : '—';
   drawLists();
 }
 

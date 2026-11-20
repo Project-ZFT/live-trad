@@ -278,6 +278,8 @@ function showVerse(v, fresh) {
   const el = $('verset');
   el.hidden = !(v && v.text);
   if (!v || !v.text) { lastVerseSig = ''; return; }
+  el.setAttribute('role', 'note');
+  el.setAttribute('aria-live', 'polite');
   el.textContent = v.text;
   const b = document.createElement('b');
   b.textContent = v.ref || '';
