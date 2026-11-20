@@ -59,6 +59,9 @@ select { font: inherit; color: var(--text); background: var(--bg); border: 1px s
 #lista p.vechi { color: #b9c0cc; }
 #lista p.vorbit { border-left: 3px solid var(--green); padding-left: 8px; margin-left: -11px; }
 #curent { color: var(--text); opacity: .7; font-style: italic; }
+#curent { min-height: 1.4em; }
+#curent::after { content: ""; display: inline-block; width: 1.2em; height: .25em; margin-left: 6px; vertical-align: middle; border-radius: 2px; background: linear-gradient(90deg, var(--accent) 20%, transparent 20%, transparent 40%, var(--accent) 40%, var(--accent) 60%, transparent 60%, transparent 80%, var(--accent) 80%); animation: puncte 1s steps(3, end) infinite; }
+@keyframes puncte { 0% { opacity: .25; } 50% { opacity: 1; } 100% { opacity: .25; } }
 #gol { color: var(--muted); font-size: 17px; text-align: center; margin-top: 14vh; padding: 0 10px; }
 #jos { position: fixed; right: 14px; bottom: max(52px, env(safe-area-inset-bottom)); background: var(--accent); color: var(--accent-text); border: 0; font-weight: 600; box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
 footer { font-size: 12px; color: var(--muted); text-align: center; padding: 6px 10px; padding-bottom: max(6px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }

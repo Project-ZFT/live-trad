@@ -365,7 +365,7 @@ const live = createLive({
   isListening: () => listening,
 });
 
-live.setDelay(2);
+live.setDelay(1.5);
 
 const offered = () => [...document.querySelectorAll('#limbi input')].filter((x) => x.checked).map((x) => x.value);
 const savedLangs = store.get('limbi6', TRANSLATED);

@@ -215,11 +215,6 @@ function onMessage(m) {
     drawStatus();
   } else if (m.t === 'line') {
     addLine(m, true);
-  } else if (m.t === 'partial') {
-    current.textContent = m.text || '…';
-    current.hidden = !m.text;
-    if (m.text) empty.hidden = true;
-    afterChange();
   } else if (m.t === 'verse') {
     showVerse(m.verse, true);
   } else if (m.t === 'typing') {
@@ -258,10 +253,22 @@ function clearLines() {
 function addLine(l, fresh) {
   if (!l || !l.text) return;
   empty.hidden = true;
+  const previous = [...list.querySelectorAll('p:not(#curent)')].at(-1);
+  if (previous) {
+    const oldText = previous.textContent;
+    if (oldText === l.text) return;
+    if (l.text.startsWith(oldText)) {
+      previous.textContent = l.text;
+      previous.classList.remove('vechi');
+      afterChange();
+      return;
+    }
+    if (oldText.startsWith(l.text)) return;
+  }
   const p = document.createElement('p');
   p.textContent = l.text;
   list.insertBefore(p, current);
-  current.textContent = '…'; // the line being spoken starts again
+  current.textContent = ''; // pending translation indicator
   const all = list.querySelectorAll('p:not(#curent)');
   all.forEach((x, i) => x.classList.toggle('vechi', i < all.length - 3));
   if (all.length > 200) all[0].remove();
@@ -271,7 +278,7 @@ function addLine(l, fresh) {
 
 function typing(on) {
   current.hidden = !on;
-  if (!on) current.textContent = '…';
+  if (!on) current.textContent = '';
   if (on) { empty.hidden = true; afterChange(); }
 }
 

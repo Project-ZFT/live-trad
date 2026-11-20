@@ -84,7 +84,6 @@ export function hostRelay({ code, info, langs, onStatus, onGuests, onJoin }) {
       toLang(lang, { t: 'line', ...l });
     },
     verse(lang, v) { verses[lang] = v; toLang(lang, { t: 'verse', verse: v }); },
-    partial(lang, text) { toLang(lang, { t: 'partial', text }); },
     hasVerse: (lang) => lang in verses,
     typing(on) { if (on === typing) return; typing = on; toAll({ t: 'typing', on }); },
     listening(on) { listening = !!on; toAll({ t: 'state', listening, langs: offered }); },
