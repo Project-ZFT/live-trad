@@ -47,7 +47,8 @@ export function createLive(hooks) {
   const S = {
     phones: false, starting: false, delay: 2,
     offered: TRANSLATED.slice(), failed: [], lastError: '', relay: null, account: null,
-    queue: Promise.resolve(), timer: null, lastVerse: null, verseCache: new Map(),
+    queue: Promise.resolve(), translationQueue: Promise.resolve(),
+    timer: null, lastVerse: null, verseCache: new Map(),
   };
   const translators = new Map(); // lang → Translator
   const preparing = new Map(); // lang → Promise
@@ -80,7 +81,25 @@ export function createLive(hooks) {
   async function translate(text, lang) {
     if (lang === SOURCE) return text;
     await ensure(lang);
-    return String((await translators.get(lang).translate(text)) || '').trim().slice(0, 680);
+    const call = async (retry) => {
+      try {
+        const result = await withTimeout(
+          translators.get(lang).translate(text),
+          30000,
+          'Traducerea în ' + LANGS[lang].ro + ' durează prea mult.',
+        );
+        return String(result || '').trim().slice(0, 680);
+      } catch (e) {
+        if (!retry && /generic|generic failure|other generic/i.test(e && (e.message || String(e)))) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          return call(true);
+        }
+        throw e;
+      }
+    };
+    const job = S.translationQueue.then(() => call(false));
+    S.translationQueue = job.catch(() => {});
+    return job;
   }
 
   const working = () => S.phones;
