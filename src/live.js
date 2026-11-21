@@ -425,20 +425,6 @@ export function createLive(hooks) {
         S.starting = true;
         try {
             S.account = account;
-            // the translators first: downloading a model has to start straight from the click
-            const results = await Promise.allSettled(S.offered.map(ensure));
-            const failed = results
-                .map((r, i) => (r.status === "rejected" ? S.offered[i] : null))
-                .filter(Boolean);
-            const firstError = failed.length
-                ? results.find((r) => r.status === "rejected").reason
-                : null;
-            S.failed = failed;
-            S.lastError = firstError
-                ? firstError.message || String(firstError)
-                : "";
-            if (failed.length)
-                S.offered = S.offered.filter((l) => !failed.includes(l));
             S.relay = hostRelay({
                 code: account.code,
                 info: { church: account.church, host: account.host },
@@ -454,12 +440,29 @@ export function createLive(hooks) {
                 },
             });
             S.relay.listening(!!hooks.isListening && hooks.isListening());
+            S.phones = true;
             // every offered Bible is loaded now, so a verse reaches the phones without waiting
             [SOURCE].concat(S.offered).forEach((l) => Bibles.load(l));
-            S.phones = true;
-            // without a translator the guests can still follow the Romanian text; say clearly what is missing
-            if (failed.length && hooks.onDropped) hooks.onDropped(failed);
             summary();
+            // Translator models may download slowly. The relay starts immediately so guests
+            // can join and receive verses even if machine translation is unavailable.
+            Promise.allSettled(S.offered.map(ensure)).then((results) => {
+                const failed = results
+                    .map((r, i) => (r.status === "rejected" ? S.offered[i] : null))
+                    .filter(Boolean);
+                const firstError = failed.length
+                    ? results.find((r) => r.status === "rejected").reason
+                    : null;
+                S.failed = failed;
+                S.lastError = firstError
+                    ? firstError.message || String(firstError)
+                    : "";
+                if (failed.length)
+                    S.offered = S.offered.filter((l) => !failed.includes(l));
+                if (S.relay) S.relay.offer(S.offered.concat(SOURCE));
+                if (failed.length && hooks.onDropped) hooks.onDropped(failed);
+                summary();
+            });
         } catch (e) {
             fail(e);
         } finally {
