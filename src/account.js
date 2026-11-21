@@ -36,8 +36,10 @@ export const validEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(s).
 
 /** The address guests open; the code is filled in for them. */
 export function guestLink(code) {
-  return new URL('./join/?c=' + encodeURIComponent(code), document.baseURI).href;
+  const clean = String(code || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  const root = new URL('./', document.baseURI);
+  return new URL('join/?c=' + encodeURIComponent(clean), root).href;
 }
 export function guestHome() {
-  return new URL('./join/', document.baseURI).href;
+  return new URL('join/', new URL('./', document.baseURI)).href;
 }

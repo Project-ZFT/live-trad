@@ -5,6 +5,20 @@ const PREFIX = 'cuvantlive-';
 export const peerIdFor = (code) => PREFIX + String(code || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 export const cleanCode = (code) => String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const KEEP_LINES = 40;
+const PEER_OPTIONS = {
+  host: '0.peerjs.com',
+  port: 443,
+  path: '/',
+  secure: true,
+  debug: 0,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+    ],
+  },
+};
 
 /**
  * Host side. info = { church, host }; events: onStatus(text, kind), onGuests(countsByLang), onJoin(lang).
@@ -50,7 +64,7 @@ export function hostRelay({ code, info, langs, onStatus, onGuests, onJoin }) {
   function open() {
     if (closed) return;
     onStatus && onStatus('Mă conectez…');
-    peer = new Peer(peerIdFor(code), { debug: 0 });
+    peer = new Peer(peerIdFor(code), PEER_OPTIONS);
     peer.on('open', () => onStatus && onStatus('ok'));
     peer.on('connection', attach);
     peer.on('disconnected', () => { if (!closed) setTimeout(() => { try { peer.reconnect(); } catch (e) { /* retried below */ } }, 1500); });
@@ -111,7 +125,7 @@ export function guestRelay({ code, onState, onMessage }) {
     clearTimeout(timer);
     onState('connecting');
     if (!peer || peer.destroyed) {
-      peer = new Peer({ debug: 0 });
+      peer = new Peer(PEER_OPTIONS);
       peer.on('open', dial);
       peer.on('disconnected', () => { if (!stopped) try { peer.reconnect(); } catch (e) { /* new peer next time */ } });
       peer.on('error', (e) => {
