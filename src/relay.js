@@ -51,7 +51,11 @@ export function hostRelay({ code, info, langs, onStatus, onGuests, onJoin }) {
 
   function attach(conn) {
     const g = { conn, lang: null, seen: Date.now() };
-    conn.on('open', () => { guests.add(g); welcome(g); changed(); });
+    const onOpen = () => { guests.add(g); welcome(g); changed(); };
+    conn.on('open', onOpen);
+    // On fast local-network connections the DataChannel may already be open
+    // before the listeners are registered — handle that case explicitly.
+    if (conn.open) onOpen();
     conn.on('data', (m) => {
       g.seen = Date.now();
       if (!m || typeof m !== 'object') return;
