@@ -5,6 +5,17 @@ const PREFIX = 'cuvantlive-';
 export const peerIdFor = (code) => PREFIX + String(code || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 export const cleanCode = (code) => String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const KEEP_LINES = 40;
+// ICE config: multiple STUN servers + TURN relays for TCP/443 so it works through strict mobile-carrier NAT and firewalls.
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  // PeerJS built-in TURN (UDP 3478) — often blocked by carriers, kept as first relay attempt
+  { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+  // Open Relay TURN — TCP/443 fallback, works through the strictest firewalls
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+];
 const PEER_OPTIONS = {
   host: '0.peerjs.com',
   port: 443,
@@ -12,30 +23,7 @@ const PEER_OPTIONS = {
   key: 'peerjs',
   secure: true,
   debug: 0,
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject',
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelayproject',
-        credential: 'openrelayproject',
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-        username: 'openrelayproject',
-        credential: 'openrelayproject',
-      },
-    ],
-    iceCandidatePoolSize: 10,
-  },
+  config: { iceServers: ICE_SERVERS, sdpSemantics: 'unified-plan', iceCandidatePoolSize: 10 },
 };
 
 /**
@@ -138,21 +126,27 @@ export function hostRelay({ code, info, langs, onStatus, onGuests, onJoin }) {
 export function guestRelay({ code, onState, onMessage }) {
   let peer = null, conn = null, lang = null, stopped = false, lastSeen = 0, timer = null, watchdog = null, tries = 0;
 
+  function killPeer() {
+    if (peer) { try { peer.destroy(); } catch (e) { /* already gone */ } peer = null; }
+    if (conn) { try { conn.close(); } catch (e) { /* already gone */ } conn = null; }
+  }
+
   function connect() {
     if (stopped) return;
     clearTimeout(timer);
+    // Always start with a fresh Peer so stale listeners / half-open state never block reconnects.
+    killPeer();
     onState('connecting');
-    if (!peer || peer.destroyed) {
-      peer = new Peer(PEER_OPTIONS);
-      peer.on('open', dial);
-      peer.on('disconnected', () => { if (!stopped) try { peer.reconnect(); } catch (e) { /* new peer next time */ } });
-      peer.on('error', (e) => {
-        if (stopped) return;
-        if (e.type === 'peer-unavailable') onState('notfound');
-        else onState('offline');
-        later();
-      });
-    } else if (peer.open) dial();
+    peer = new Peer(PEER_OPTIONS);
+    peer.on('open', dial);
+    peer.on('disconnected', () => { if (!stopped) { killPeer(); later(); } });
+    peer.on('error', (e) => {
+      if (stopped) return;
+      if (e.type === 'peer-unavailable') onState('notfound');
+      else onState('offline');
+      killPeer();
+      later();
+    });
   }
 
   function later() {
@@ -162,11 +156,11 @@ export function guestRelay({ code, onState, onMessage }) {
   }
 
   function dial() {
-    if (stopped) return;
-    if (conn) { try { conn.close(); } catch (e) { /* old one */ } }
+    if (stopped || !peer) return;
+    if (conn) { try { conn.close(); } catch (e) { /* old one */ } conn = null; }
     const c = peer.connect(peerIdFor(code), { reliable: true });
     conn = c;
-    const opening = setTimeout(() => { if (conn === c && !c.open) { onState('offline'); later(); } }, 30000);
+    const opening = setTimeout(() => { if (conn === c && !c.open) { onState('offline'); killPeer(); later(); } }, 30000);
     c.on('open', () => {
       clearTimeout(opening);
       tries = 0;
@@ -175,14 +169,14 @@ export function guestRelay({ code, onState, onMessage }) {
       if (lang) c.send({ t: 'lang', lang });
     });
     c.on('data', (m) => { lastSeen = Date.now(); if (m && m.t !== 'ping') onMessage(m); });
-    c.on('close', () => { if (conn === c && !stopped) { onState('offline'); later(); } });
-    c.on('error', () => { if (conn === c && !stopped) { onState('offline'); later(); } });
+    c.on('close', () => { if (conn === c && !stopped) { onState('offline'); killPeer(); later(); } });
+    c.on('error', () => { if (conn === c && !stopped) { onState('offline'); killPeer(); later(); } });
   }
 
   watchdog = setInterval(() => {
     if (conn && conn.open) {
       try { conn.send({ t: 'ping' }); } catch (e) { /* closing */ }
-      if (Date.now() - lastSeen > 50000) { onState('offline'); dial(); }
+      if (Date.now() - lastSeen > 50000) { onState('offline'); killPeer(); later(); }
     }
   }, 15000);
 
@@ -190,6 +184,6 @@ export function guestRelay({ code, onState, onMessage }) {
   return {
     setLang(l) { lang = l; if (conn && conn.open) conn.send({ t: 'lang', lang: l }); },
     retryNow() { tries = 0; connect(); },
-    stop() { stopped = true; clearInterval(watchdog); clearTimeout(timer); try { peer && peer.destroy(); } catch (e) { /* gone */ } },
+    stop() { stopped = true; clearInterval(watchdog); clearTimeout(timer); killPeer(); },
   };
 }
